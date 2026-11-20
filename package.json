@@ -9,7 +9,7 @@
     "typecheck": "tsc --noEmit",
     "format": "prettier --write \"*.{ts,mjs}\" \"tests/**/*.mjs\"",
     "format:check": "prettier --check \"*.{ts,mjs}\" \"tests/**/*.mjs\"",
-    "test": "node --test tests/",
+    "test": "node --test tests/*.test.mjs",
     "ci": "npm run typecheck && npm run format:check && npm run build && npm test",
     "version": "node version-bump.mjs && git add manifest.json versions.json"
   },

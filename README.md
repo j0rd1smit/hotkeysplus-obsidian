@@ -1,5 +1,15 @@
 # hotkeysplus-obsidian
 
+## This fork
+
+A maintained fork of [argenos/hotkeysplus-obsidian](https://github.com/argenos/hotkeysplus-obsidian) by [j0rd1smit](https://github.com/j0rd1smit).
+Upstream stopped loading in recent Obsidian versions (`Class constructor ... cannot be invoked without 'new'`).
+This fork fixes that and keeps the same plugin id, so existing hotkey bindings carry over.
+
+Install with [BRAT](https://github.com/TfTHacker/obsidian42-brat): add `j0rd1smit/hotkeysplus-obsidian` as a beta plugin.
+
+---
+
 This repository contains a few shortcuts that I use with [Obsidian](https://obsidian.md/). The defaults hotkeys are:
 
 | Hotkey                                            | Action                                      | Author                                      |
@@ -19,4 +29,4 @@ This repository contains a few shortcuts that I use with [Obsidian](https://obsi
 
 ## Installing
 
-Unzip the [latest release](https://github.com/argenos/hotkeysplus-obsidian/releases/latest) into your `<vault>/.obsidian/plugins/` folder.
+Install with BRAT (see above), or copy `main.js` and `manifest.json` from the [latest release](https://github.com/j0rd1smit/hotkeysplus-obsidian/releases/latest) into `<vault>/.obsidian/plugins/hotkeysplus-obsidian/`.

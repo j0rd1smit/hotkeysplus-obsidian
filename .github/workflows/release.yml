@@ -1,83 +1,82 @@
-name: Build obsidian plugin
+name: Release Obsidian plugin
 
+# Actions -> Release Obsidian plugin -> "Run workflow" on master.
+# Bumps the version, runs `npm run ci`, commits, tags and publishes the
+# release BRAT installs from (main.js + manifest.json as assets).
 on:
-  push:
-    # Sequence of patterns matched against refs/tags
-    tags:
-    - '*' # Push events to matching any tag format, i.e. 1.0, 20.15.10
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: Which part of the version to bump
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+        default: patch
 
-env:
-  PLUGIN_NAME: hotkeysplus-obsidian # Change this to the name of your plugin-id folder
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
 
 jobs:
-  build:
-
+  release:
+    name: Release
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v2
-    - name: Use Node.js
-      uses: actions/setup-node@v1
-      with:
-        node-version: '14.x' # You might need to adjust this value to your own version
-    - name: Build
-      id: build
-      run: | 
-        npm install
-        npm run build --if-present
-        mkdir ${{ env.PLUGIN_NAME }}
-        cp main.js manifest.json ${{ env.PLUGIN_NAME }}
-        zip -r ${{ env.PLUGIN_NAME }}.zip ${{ env.PLUGIN_NAME }}
-        ls
-        echo "::set-output name=tag_name::$(git tag --sort version:refname | tail -n 1)"
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        VERSION: ${{ github.ref }}
-      with:
-        tag_name: ${{ github.ref }}
-        release_name: ${{ github.ref }}
-        draft: false
-        prerelease: false
-    - name: Upload zip file
-      id: upload-zip
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }} 
-        asset_path: ./${{ env.PLUGIN_NAME }}.zip 
-        asset_name: ${{ env.PLUGIN_NAME }}-${{ steps.build.outputs.tag_name }}.zip 
-        asset_content_type: application/zip
-    - name: Upload main.js
-      id: upload-main
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }} 
-        asset_path: ./main.js
-        asset_name: main.js
-        asset_content_type: text/javascript
-    - name: Upload manifest.json
-      id: upload-manifest
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }} 
-        asset_path: ./manifest.json
-        asset_name: manifest.json
-        asset_content_type: application/json
-    # - name: Upload styles.css
-    #   id: upload-css
-    #   uses: actions/upload-release-asset@v1
-    #   env:
-    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    #   with:
-    #     upload_url: ${{ steps.create_release.outputs.upload_url }} 
-    #     asset_path: ./styles.css
-    #     asset_name: styles.css
-    #     asset_content_type: text/css
+      - name: Refuse to release anything but master
+        if: github.ref != 'refs/heads/master'
+        env:
+          REF: ${{ github.ref }}
+        run: |
+          echo "::error::Releases run from master, not $REF."
+          exit 1
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install
+        run: npm ci --no-audit --no-fund
+
+      # `npm version` runs the `version` script, which copies the new version
+      # into manifest.json and versions.json and stages them.
+      - name: Bump the version
+        id: bump
+        env:
+          BUMP: ${{ inputs.bump }}
+        run: |
+          npm version --no-git-tag-version "$BUMP"
+          git add package.json package-lock.json
+          echo "tag=$(node -p 'require("./package.json").version')" >> "$GITHUB_OUTPUT"
+
+      - name: Check, build and test
+        run: npm run ci
+
+      - name: Commit and tag
+        env:
+          TAG: ${{ steps.bump.outputs.tag }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m "Release $TAG"
+          git tag "$TAG"
+          git push origin HEAD:master "refs/tags/$TAG"
+
+      - name: Create release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.bump.outputs.tag }}
+        run: |
+          gh release create "$TAG" \
+            --title="$TAG" \
+            --generate-notes \
+            main.js manifest.json

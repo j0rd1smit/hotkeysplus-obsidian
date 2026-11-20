@@ -1,10 +1,10 @@
 {
   "id": "hotkeysplus-obsidian",
   "name": "Hotkeys++",
-  "description": "Additional hotkeys to do common things in Obsidian",
   "version": "0.2.7",
-  "author": "Argentina Ortega Sainz",
-  "authorUrl": "https://argentinaos.com",
-  "isDesktopOnly": false,
-  "minAppVersion": "0.12.19"
+  "minAppVersion": "1.0.0",
+  "description": "Additional hotkeys to do common things in Obsidian. j0rd1smit's maintained fork of argenos/hotkeysplus-obsidian.",
+  "author": "j0rd1smit (fork of Argentina Ortega Sainz' Hotkeys++)",
+  "authorUrl": "https://github.com/j0rd1smit/hotkeysplus-obsidian",
+  "isDesktopOnly": false
 }

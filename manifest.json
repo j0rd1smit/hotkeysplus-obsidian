@@ -1,7 +1,7 @@
 {
   "id": "hotkeysplus-obsidian",
   "name": "Hotkeys++",
-  "version": "0.2.7",
+  "version": "0.3.0",
   "minAppVersion": "1.0.0",
   "description": "Additional hotkeys to do common things in Obsidian. j0rd1smit's maintained fork of argenos/hotkeysplus-obsidian.",
   "author": "j0rd1smit (fork of Argentina Ortega Sainz' Hotkeys++)",
